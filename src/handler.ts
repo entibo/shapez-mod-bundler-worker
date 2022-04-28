@@ -39,6 +39,16 @@ async function getMod(modName: string) {
   throw `${modName}: no .js file found in zip`
 }
 
+const registerModWrapper = `
+const __registerMod = window.$shapez_registerMod;
+window.$shapez_registerMod = (mod, metadata, ...args) => {
+  if(!metadata) metadata = {}
+  if(!("website" in metadata)) {
+    metadata.website = ""
+  }
+  __registerMod(mod, metadata, ...args)
+};
+`
 async function getBundle(str: string) {
   let mods = []
   let errors = []
@@ -55,7 +65,7 @@ async function getBundle(str: string) {
     const alertMsg = `Errors while downloading mods:\n` + errors.join('\n')
     bundle += `\n\nalert(\`${alertMsg}\`)`
   }
-  return bundle
+  return [registerModWrapper, bundle].join('\n')
 }
 
 const footer = `
